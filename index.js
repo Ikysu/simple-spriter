@@ -2,12 +2,12 @@ const fs = require("fs");
 const sizeOf = require("image-size");
 const { createCanvas, loadImage } = require("canvas");
 const path = process.argv[2];
-const isPackMode = path.split(".").at(-1) !== "json";
+const isPackMode = !path.endsWith(".json");
 const folderPath = isPackMode
   ? path.at(-1) === "/"
     ? path.slice(0, -1)
     : path
-  : path.split(".").slice(0, -1).join(".");
+  : path.slice(0, -5);
 
 let json;
 
@@ -99,13 +99,18 @@ Node.prototype.insert_rect = function (rect) {
     let maxHeight = 0;
 
     for (let i = 0; i < sorted.length; i++) {
-      const rect = new Rect(0, 0, sorted[i].frame.w, sorted[i].frame.h);
+      const rect = new Rect(0, 0, sorted[i].frame.w + 1, sorted[i].frame.h + 1);
       const node = start_node.insert_rect(rect).rect;
-      if (maxWidth < node.x + node.w) maxWidth = node.x + node.w;
-      if (maxHeight < node.y + node.h) maxHeight = node.y + node.h;
-      sorted[i].frame.x = node.x;
-      sorted[i].frame.y = node.y;
+      sorted[i].frame.x = node.x + 1;
+      sorted[i].frame.y = node.y + 1;
+      if (maxWidth < sorted[i].frame.x + sorted[i].frame.w)
+        maxWidth = sorted[i].frame.x + sorted[i].frame.w;
+      if (maxHeight < sorted[i].frame.y + sorted[i].frame.h)
+        maxHeight = sorted[i].frame.y + sorted[i].frame.h;
     }
+
+    maxWidth += 1;
+    maxHeight += 2;
 
     canvas.width = maxWidth;
     canvas.height = maxHeight;
@@ -127,6 +132,7 @@ Node.prototype.insert_rect = function (rect) {
 
     for (let i = 0; i < sorted.length; i++) {
       console.info("Draw:", sorted[i].name);
+      sorted[i].frame.y = sorted[i].frame.y + 1;
       output.frames[sorted[i].name] = {
         frame: sorted[i].frame,
         rotated: false,
