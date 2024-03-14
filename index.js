@@ -156,6 +156,12 @@ Node.prototype.insert_rect = function (rect) {
           w: frameInJson.w,
           h: frameInJson.h,
         },
+        real: {
+          w: w - 2,
+          h: w - 2,
+          x: x + 1,
+          y: x + 1,
+        },
       };
       ctx.drawImage(file, 0, 0, w, h, x, y, w, h);
     }
@@ -186,24 +192,14 @@ Node.prototype.insert_rect = function (rect) {
         console.info("Finish!");
         return;
       }
-      const { frame } = json.frames[frames[id]];
+      const { real } = json.frames[frames[id]];
 
-      canvas.width = frame.w;
-      canvas.height = frame.h;
+      canvas.width = real.w;
+      canvas.height = real.h;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.drawImage(
-        png,
-        frame.x,
-        frame.y,
-        frame.w,
-        frame.h,
-        0,
-        0,
-        frame.w,
-        frame.h
-      );
+      ctx.drawImage(png, real.x, real.y, real.w, real.h, 0, 0, real.w, real.h);
 
       const file = fs.createWriteStream(folderPath + "\\" + frames[id]);
       const stream = canvas.createPNGStream();
