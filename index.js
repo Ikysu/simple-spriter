@@ -99,7 +99,7 @@ Node.prototype.insert_rect = function (rect) {
     let maxHeight = 0;
 
     for (let i = 0; i < sorted.length; i++) {
-      const rect = new Rect(0, 0, sorted[i].frame.w + 1, sorted[i].frame.h + 1);
+      const rect = new Rect(0, 0, sorted[i].frame.w + 2, sorted[i].frame.h + 2);
       const node = start_node.insert_rect(rect).rect;
       sorted[i].frame.x = node.x + 1;
       sorted[i].frame.y = node.y + 1;
@@ -109,18 +109,18 @@ Node.prototype.insert_rect = function (rect) {
         maxHeight = sorted[i].frame.y + sorted[i].frame.h;
     }
 
-    maxWidth += 1;
-    maxHeight += 2;
-
     canvas.width = maxWidth;
     canvas.height = maxHeight;
+
+    const fileName = folderPath.split("\\").at(-1);
+    const newForlder = `${folderPath}-new`;
 
     const output = {
       frames: {},
       meta: {
         app: "https://spriter.uki.su",
         version: "1.0",
-        image: folderPath.split("\\").at(-1) + ".png",
+        image: fileName + ".png",
         format: "RGBA8888",
         size: {
           w: maxWidth,
@@ -131,39 +131,41 @@ Node.prototype.insert_rect = function (rect) {
     };
 
     for (let i = 0; i < sorted.length; i++) {
-      console.info("Draw:", sorted[i].name);
-      sorted[i].frame.y = sorted[i].frame.y + 1;
-      output.frames[sorted[i].name] = {
-        frame: sorted[i].frame,
+      const { name, frame, file } = sorted[i];
+      const { w, h, x, y } = frame;
+      console.info("Draw:", name);
+      const frameInJson = {
+        x,
+        y: y + 1,
+        w,
+        h: h - 2,
+      };
+      output.frames[name] = {
+        frame: frameInJson,
         rotated: false,
         trimmed: false,
         spriteSourceSize: {
           x: 0,
           y: 0,
-          w: sorted[i].frame.w,
-          h: sorted[i].frame.h,
+          w: frameInJson.w,
+          h: frameInJson.h,
         },
         sourceSize: {
-          w: sorted[i].frame.w,
-          h: sorted[i].frame.h,
+          w: frameInJson.w,
+          h: frameInJson.h,
         },
       };
-      ctx.drawImage(
-        sorted[i].file,
-        0,
-        0,
-        sorted[i].frame.w,
-        sorted[i].frame.h,
-        sorted[i].frame.x,
-        sorted[i].frame.y,
-        sorted[i].frame.w,
-        sorted[i].frame.h
-      );
+      ctx.drawImage(file, 0, 0, w, h, x, y, w, h);
     }
 
-    fs.writeFileSync(folderPath + "-new.json", JSON.stringify(output, null, 2));
+    if (!fs.existsSync(newForlder)) fs.mkdirSync(newForlder);
 
-    const file = fs.createWriteStream(folderPath + "-new.png");
+    fs.writeFileSync(
+      `${folderPath}-new\\${fileName}.json`,
+      JSON.stringify(output, null, 2)
+    );
+
+    const file = fs.createWriteStream(`${folderPath}-new\\${fileName}.png`);
     const stream = canvas.createPNGStream();
     stream.pipe(file);
     file.on("finish", () => {
