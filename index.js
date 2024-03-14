@@ -99,15 +99,17 @@ Node.prototype.insert_rect = function (rect) {
     let maxHeight = 0;
 
     for (let i = 0; i < sorted.length; i++) {
-      const rect = new Rect(0, 0, sorted[i].frame.w + 2, sorted[i].frame.h + 2);
+      const rect = new Rect(0, 0, sorted[i].frame.w + 1, sorted[i].frame.h);
       const node = start_node.insert_rect(rect).rect;
       sorted[i].frame.x = node.x + 1;
-      sorted[i].frame.y = node.y + 1;
+      sorted[i].frame.y = node.y;
       if (maxWidth < sorted[i].frame.x + sorted[i].frame.w)
         maxWidth = sorted[i].frame.x + sorted[i].frame.w;
       if (maxHeight < sorted[i].frame.y + sorted[i].frame.h)
         maxHeight = sorted[i].frame.y + sorted[i].frame.h;
     }
+
+    maxWidth += 1;
 
     canvas.width = maxWidth;
     canvas.height = maxHeight;
@@ -136,9 +138,9 @@ Node.prototype.insert_rect = function (rect) {
       console.info("Draw:", name);
       const frameInJson = {
         x,
-        y: y + 1,
+        y,
         w,
-        h: h - 2,
+        h: h - 1,
       };
       output.frames[name] = {
         frame: frameInJson,
