@@ -99,17 +99,15 @@ Node.prototype.insert_rect = function (rect) {
     let maxHeight = 0;
 
     for (let i = 0; i < sorted.length; i++) {
-      const rect = new Rect(0, 0, sorted[i].frame.w + 1, sorted[i].frame.h);
+      const rect = new Rect(0, 0, sorted[i].frame.w, sorted[i].frame.h);
       const node = start_node.insert_rect(rect).rect;
-      sorted[i].frame.x = node.x + 1;
+      sorted[i].frame.x = node.x;
       sorted[i].frame.y = node.y;
       if (maxWidth < sorted[i].frame.x + sorted[i].frame.w)
         maxWidth = sorted[i].frame.x + sorted[i].frame.w;
       if (maxHeight < sorted[i].frame.y + sorted[i].frame.h)
         maxHeight = sorted[i].frame.y + sorted[i].frame.h;
     }
-
-    maxWidth += 1;
 
     canvas.width = maxWidth;
     canvas.height = maxHeight;
@@ -134,33 +132,21 @@ Node.prototype.insert_rect = function (rect) {
 
     for (let i = 0; i < sorted.length; i++) {
       const { name, frame, file } = sorted[i];
-      const { w, h, x, y } = frame;
+      let { w, h, x, y } = frame;
       console.info("Draw:", name);
-      const frameInJson = {
-        x,
-        y,
-        w,
-        h: h - 1,
-      };
       output.frames[name] = {
-        frame: frameInJson,
+        frame,
         rotated: false,
         trimmed: false,
         spriteSourceSize: {
           x: 0,
           y: 0,
-          w: frameInJson.w,
-          h: frameInJson.h,
+          w,
+          h,
         },
         sourceSize: {
-          w: frameInJson.w,
-          h: frameInJson.h,
-        },
-        real: {
-          w: w - 2,
-          h: w - 2,
-          x: x + 1,
-          y: x + 1,
+          w,
+          h,
         },
       };
       ctx.drawImage(file, 0, 0, w, h, x, y, w, h);
@@ -192,14 +178,24 @@ Node.prototype.insert_rect = function (rect) {
         console.info("Finish!");
         return;
       }
-      const { real } = json.frames[frames[id]];
+      let { frame } = json.frames[frames[id]];
 
-      canvas.width = real.w;
-      canvas.height = real.h;
+      canvas.width = frame.w;
+      canvas.height = frame.h;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.drawImage(png, real.x, real.y, real.w, real.h, 0, 0, real.w, real.h);
+      ctx.drawImage(
+        png,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        0,
+        0,
+        frame.w,
+        frame.h
+      );
 
       const file = fs.createWriteStream(folderPath + "\\" + frames[id]);
       const stream = canvas.createPNGStream();
